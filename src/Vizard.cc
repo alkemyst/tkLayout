@@ -2312,9 +2312,9 @@ namespace insur {
 	myTable->setContent(3, 1, " ");
 	myTable->setContent(4, 1, " ");
 
-	gStyle->SetTitleX(0.54);
-	gStyle->SetTitleW(1);
-	gStyle->SetOptStat("emr");
+	//gStyle->SetTitleX(0.54);
+	//gStyle->SetTitleW(1);
+	//gStyle->SetOptStat("emr");
 	if (parametrizedResolutionLocalXBarrelMap[tag].GetEntries() != 0) {
 	  TCanvas resoXBarCanvas;
 	  resoXBarCanvas.SetFillColor(color_plot_background);

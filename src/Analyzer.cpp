@@ -11,6 +11,7 @@
 
 #include "AnalyzerVisitors/MaterialBillAnalyzer.h"
 #include <Units.h>
+#include <PlotStyle.hh>
 
 #undef MATERIAL_SHADOW
 
@@ -68,6 +69,9 @@ namespace insur {
     geomLiteEC         = nullptr; geomLiteECCreated=false;
     geometryTracksUsed = 0;
     materialTracksUsed = 0;
+
+    // Some stylish option
+    PlotStyle::setTklayoutStyle();
   }
 
   // private
@@ -3070,6 +3074,7 @@ void Analyzer::analyzeGeometry(Tracker& tracker, int nTracks /*=1000*/ ) {
   totalEtaProfile.SetTitle("Number of modules with at least one hit;#eta;Number of hit modules");
   totalEtaProfile.SetBins(100, 0, maxEta);
   totalEtaProfile.SetStats(0);
+  std::cerr << "totalEtaProfile has y axis offset " << totalEtaProfile.GetYaxis()->GetTitleOffset() << std::endl;
 
   totalEtaProfileSensors.Reset();
   totalEtaProfileSensors.SetName("totalEtaProfileSensors");

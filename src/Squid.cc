@@ -7,6 +7,7 @@
 #include "SvnRevision.h"
 #include "Squid.h"
 #include "StopWatch.h"
+#include "PlotStyle.hh"
 
 namespace insur {
   // public
@@ -24,7 +25,6 @@ namespace insur {
     px = NULL;
     pi = NULL;
     pm = NULL;
-    //pixelAnalyzer = NULL;
     sitePrepared = false;
     myGeometryFile_ = "";
     mySettingsFile_ = "";
@@ -32,6 +32,7 @@ namespace insur {
     myPixelMaterialFile_ = "";
     defaultMaterialFile = false;
     defaultPixelMaterialFile = false;
+    PlotStyle::setTklayoutStyle();
   }
 
   /**
@@ -44,7 +45,6 @@ namespace insur {
     if (pm) delete pm;
     if (pi) delete pi;
     if (px) delete px;
-    //if (pixelAnalyzer) delete pixelAnalyzer;
     StopWatch::destroy();
   }
 
@@ -184,38 +184,6 @@ namespace insur {
     stopTaskClock();
     return true;
   }
-
- /*
-  bool Squid::buildNewTracker() {
-    boost::ptree pt;
-    info_parser::read_info(getGeometryFile(), pt);
-  }
-*/
-  /**
-   * Dress the previously created geometry with module options. The modified tracker object remains
-   * in the squid as the current tracker until it is overwritten by a call to another function that creates
-   * a new one. If the tracker object has not been created yet, the function fails. If a pixel detector was
-   * also created in a previous step, it is dressed here as well. Just like the tracker object, the modified
-   * pixel detector remains in the squid until it is replaced by a call to another function creating a new
-   * one.
-   * @param settingsfile The name and - if necessary - path of the module settings configuration file
-   * @return True if there was an existing tracker to dress, false otherwise
-   */
-/*  bool Squid::dressTracker() {
-    if (tr) {
-      startTaskClock("Assigning module types to tracker and pixel");
-      cp.dressTracker(tr, getSettingsFile());
-      if (px) cp.dressPixels(px, getSettingsFile());
-      stopTaskClock();
-      return true;
-    }
-    else {
-      logERROR(err_no_tracker);
-      stopTaskClock();
-      return false;
-    }
-  }
-*/
 
   /**
    * Build up the inactive surfaces around the previously created tracker geometry. The resulting collection
@@ -442,7 +410,6 @@ namespace insur {
       else trackerName = default_trackername;
     }
     string layoutDirectory;
-    //styleDirectory=mainConfiguration.getStyleDirectory();
     layoutDirectory=mainConfiguration.getLayoutDirectory();
     layoutDirectory+="/"+trackerName;
     if (layoutDirectory!="") site.setTargetDirectory(layoutDirectory);
@@ -487,8 +454,13 @@ namespace insur {
   bool Squid::pureAnalyzeGeometry(int tracks) {
     if (tr) {
       startTaskClock("Analyzing geometry");
+      std::cerr << "Y1 title offset is " << gStyle->GetTitleYOffset() << std::endl;
+        pixelAnalyzer.analyzeGeometry(*px, tracks);
+      if (px) {
+        std::cerr << "Y3 title offset is " << gStyle->GetTitleYOffset() << std::endl;
       a.analyzeGeometry(*tr, tracks);
-      if (px) pixelAnalyzer.analyzeGeometry(*px, tracks);
+        std::cerr << "Y4 title offset is " << gStyle->GetTitleYOffset() << std::endl;
+      }
       stopTaskClock();
       return true; // TODO: this return value is not really meaningful
     } else {
