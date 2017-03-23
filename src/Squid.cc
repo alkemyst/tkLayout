@@ -501,14 +501,11 @@ namespace insur {
     // Call this before analyzetrigger if you want to have the map of suggested spacings
     if (detailed) {
       startTaskClock("Creating distance tuning plots");
-      a.createTriggerDistanceTuningPlots(*tr, mainConfiguration.getTriggerMomenta());
+      a.createTriggerDistanceTuningPlots(*tr);
       stopTaskClock();
     }
     startTaskClock("Creating trigger efficiency plots");
-    a.analyzeTriggerEfficiency(*tr,
-                               mainConfiguration.getTriggerMomenta(),
-                               mainConfiguration.getThresholdProbabilities(),
-                               tracks);
+    a.analyzeTriggerEfficiency(*tr, tracks);
     stopTaskClock();
     return true;
   }
@@ -523,11 +520,11 @@ namespace insur {
 //      startTaskClock(!trackingResolution ? "Analyzing material budget" : "Analyzing material budget and estimating resolution");
       // TODO: insert the creation of sample tracks here, to compute intersections only once
       startTaskClock("Analyzing material budget" );
-      a.analyzeMaterialBudget(*mb, mainConfiguration.getMomenta(), tracks, pm);
+      a.analyzeMaterialBudget(*mb, tracks, pm);
       stopTaskClock();
       if (pm) {
         startTaskClock("Analyzing pixel material budget");
-        pixelAnalyzer.analyzeMaterialBudget(*pm, mainConfiguration.getMomenta(), tracks, NULL);
+        pixelAnalyzer.analyzeMaterialBudget(*pm, tracks, NULL);
         stopTaskClock();
       }
       startTaskClock("Computing the weight summary");
@@ -541,20 +538,14 @@ namespace insur {
       if (triggerResolution) {
         startTaskClock("Estimating tracking resolutions");
         a.analyzeTaggedTracking(*mb,
-                                mainConfiguration.getMomenta(),
-                                mainConfiguration.getTriggerMomenta(),
-                                mainConfiguration.getThresholdProbabilities(),
-				                        false,
-				                        debugResolution,
+				false,
+				debugResolution,
                                 tracks, pm);
         if (pm) {
           pixelAnalyzer.analyzeTaggedTracking(*pm,
-                                              mainConfiguration.getMomenta(),
-					                                    mainConfiguration.getTriggerMomenta(),
-					                                    mainConfiguration.getThresholdProbabilities(),
-					                                    true,
-					                                    debugResolution,
-					                                    tracks, nullptr);
+					      true,
+					      debugResolution,
+					      tracks, nullptr);
         }
         stopTaskClock();
       }

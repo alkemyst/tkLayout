@@ -162,12 +162,9 @@ namespace insur {
     TH1D& getSpacingTuningFrame() { return spacingTuningFrame; }
     const double& getTriggerRangeLowLimit(const std::string& typeName ) { return triggerRangeLowLimit[typeName] ; }
     const double& getTriggerRangeHighLimit(const std::string& typeName ) { return triggerRangeHighLimit[typeName] ; }
-    /*virtual*/ void analyzeMaterialBudget(MaterialBudget& mb, const std::vector<double>& momenta, int etaSteps = 50, MaterialBudget* pm = NULL);
+    /*virtual*/ void analyzeMaterialBudget(MaterialBudget& mb, int etaSteps = 50, MaterialBudget* pm = NULL);
     void computeTriggerProcessorsBandwidth(Tracker& tracker);
     void analyzeTaggedTracking(MaterialBudget& mb,
-                               const std::vector<double>& momenta,
-                               const std::vector<double>& triggerMomenta,
-                               const std::vector<double>& thresholdProbabilities,
                                bool isPixel,
                                bool& debugResolution,
                                int etaSteps = 50,
@@ -185,10 +182,8 @@ namespace insur {
     std::map<std::string, std::vector<TProfile*>> hisPHitProbContamInOut; //!< InOut approach: Calculated occupancy from flux & pile-up @ ith+3 measurement plane at given eta for set of p
     
     virtual void analyzeTriggerEfficiency(Tracker& tracker,
-                                          const std::vector<double>& triggerMomenta,
-                                          const std::vector<double>& thresholdProbabilities,
                                           int etaSteps = 50);
-    void createTriggerDistanceTuningPlots(Tracker& tracker, const std::vector<double>& triggerMomenta);
+    void createTriggerDistanceTuningPlots(Tracker& tracker);
     void analyzeGeometry(Tracker& tracker, int nTracks = 1000);
     void computeBandwidth(Tracker& tracker);
     void computeTriggerFrequency(Tracker& tracker);
