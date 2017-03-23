@@ -47,6 +47,9 @@ public:
 
   PropertyVector<std::string, ','> irradiationMapFiles;
   //std::vector<Property<std::string, NoDefault>> irradiationMapFiles;
+  MultiProperty<set<double>, ','> resolutionMomenta;
+  MultiProperty<set<double>, ','> triggerMomenta;
+  MultiProperty<set<double>, ','> triggerEfficiencies;
 
   Property<double, NoDefault> minTracksEta, maxTracksEta;
 

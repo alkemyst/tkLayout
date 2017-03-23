@@ -34,7 +34,10 @@ SimParms::SimParms() :
     irradiationMapFiles("irradiationMapFiles", parsedAndChecked()),
     minTracksEta("minTracksEta", parsedOnly()),
     maxTracksEta("maxTracksEta", parsedOnly()),
-    taggedTracking("TaggedTracking", parsedOnly())
+    taggedTracking("TaggedTracking", parsedOnly()),
+    resolutionMomenta("resolutionMomenta", parsedOnly()),
+    triggerMomenta("triggerMomenta", parsedOnly()),
+    triggerEfficiencies("triggerEfficiencies", parsedOnly())
 { }
 
 void SimParms::build() {
