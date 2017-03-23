@@ -73,49 +73,6 @@ void mainConfigHandler::askStandardDirectory() {
   cin >> standardDirectory_;
 }
 
-void mainConfigHandler::askMomenta() {
-  string tempString = "";
-  string tempString2 = "";
-
-  cout << "*** Specify the list of transverse momenta to be used for the" << endl
-      << "    tracking performance test (in GeV/c)" << endl
-      << "    Example: 1, 10, 100 : ";
-  cin >> tempString;
-
-  getline(cin,tempString2);
-  tempString+=tempString2;
-  momenta_ = parseDoubleList(tempString);
-}
-
-void mainConfigHandler::askTriggerMomenta() {
-  string tempString = "";
-  string tempString2 = "";
-
-  cout << "*** Specify the list of transverse momenta to be used for the" << endl
-      << "    trigger efficiency performance test (in GeV/c)" << endl
-      << "    Example: 1, 2, 5, 10 : ";
-  cin >> tempString;
-  getline(cin,tempString2);
-  tempString+=tempString2;
-  triggerMomenta_ = parseDoubleList(tempString);
-}
-
-void mainConfigHandler::askThresholdProbabilities() {
-  string tempString = "";
-  string tempString2 = "";
-
-  cout << "*** Specify the list of trigger efficiency to be used for the" << endl
-      << "    pt threshold find test (in percent: write 100 for full efficiency)" << endl
-      << "    Example: 1, 50, 90, 95 : ";
-  cin >> tempString;
-  getline(cin,tempString2);
-  tempString+=tempString2;
-  thresholdProbabilities_ = parseDoubleList(tempString);
-  for (vector<double>::iterator it = thresholdProbabilities_.begin();
-      it!=thresholdProbabilities_.end(); ++it) (*it)/=100;
-}
-
-
 bool mainConfigHandler::createConfigurationFileFromQuestions(string& configFileName) {
 
   // Clear screen
@@ -140,12 +97,6 @@ bool mainConfigHandler::createConfigurationFileFromQuestions(string& configFileN
   askStandardDirectory();
   cout << endl;
 
-  askMomenta();
-
-  askTriggerMomenta();
-
-  askThresholdProbabilities();
-
   ofstream configFile;
   configFile.open(configFileName.c_str(), ifstream::out);
   if (!configFile.good()) {
@@ -156,28 +107,6 @@ bool mainConfigHandler::createConfigurationFileFromQuestions(string& configFileN
     configFile << BINDIRECTORYDEFINITION << "=\"" << binDirectory_ << "\"" << endl;
     configFile << LAYOUTDIRECTORYDEFINITION << "=\"" << layoutDirectory_ << "\"" << endl;
     configFile << STANDARDDIRECTORYDEFINITION << "=\"" << standardDirectory_ << "\"" << endl;
-
-    configFile << MOMENTADEFINITION << "=\"";
-    for (std::vector<double>::iterator it = momenta_.begin(); it!=momenta_.end(); ++it) {
-      if (it!=momenta_.begin()) configFile << ", ";
-      configFile << std::fixed << std::setprecision(2) << (*it);
-    }
-    configFile << "\"" << std::endl;
-
-    configFile << TRIGGERMOMENTADEFINITION << "=\"";
-    for (std::vector<double>::iterator it = triggerMomenta_.begin(); it!=triggerMomenta_.end(); ++it) {
-      if (it!=triggerMomenta_.begin()) configFile << ", ";
-      configFile << std::fixed << std::setprecision(2) << (*it);
-    }
-    configFile << "\"" << std::endl;
-
-    configFile << THRESHOLDPROBABILITIESDEFINITION << "=\"";
-    for (std::vector<double>::iterator it = thresholdProbabilities_.begin(); it!=thresholdProbabilities_.end(); ++it) {
-      if (it!=thresholdProbabilities_.begin()) configFile << ", ";
-      configFile << std::fixed << std::setprecision(2) << (*it);
-    }
-    configFile << "\"" << std::endl;
-
     configFile.close();
   }
 
@@ -212,9 +141,6 @@ bool mainConfigHandler::readConfigurationFile(string& configFileName) {
   bool binFound=false;
   bool layoutFound=false;
   bool xmlFound=false;
-  bool momentaFound=false;
-  bool triggerMomentaFound=false;
-  bool thresholdProbabilitiesFound=false;
   ifstream configFileIs;
   ofstream configFileOs;
 
@@ -226,6 +152,7 @@ bool mainConfigHandler::readConfigurationFile(string& configFileName) {
     if (parseLine(myLine, parameter, value)) {
       // Case insensitive: the configuration file should be a shell script too
       // std::transform(parameter.begin(), parameter.end(), parameter.begin(), ::tolower);
+      bool obsolete = false;
       if (parameter==BINDIRECTORYDEFINITION) {
         binDirectory_ = value;
         binFound = true;
@@ -236,23 +163,22 @@ bool mainConfigHandler::readConfigurationFile(string& configFileName) {
         standardDirectory_ = value;
         xmlFound = true;
       } else if (parameter==MOMENTADEFINITION) {
-        momenta_ = parseDoubleList(value);
-        momentaFound = true;
+        obsolete = true;
       } else if (parameter==TRIGGERMOMENTADEFINITION) {
-        triggerMomenta_ = parseDoubleList(value);
-        triggerMomentaFound = true;
+        obsolete = true;
       } else if (parameter==THRESHOLDPROBABILITIESDEFINITION) {
-        thresholdProbabilities_ = parseDoubleList(value);
-        thresholdProbabilitiesFound = true;
+        obsolete = true;
       } else {
         cerr << "ERROR: Unknown parameter " << parameter << " in the configuration file " << CONFIGURATIONFILENAME << endl;
       }
+      if (obsolete)
+	cerr << "WARNING: obsolete parameter " << parameter << " in configuration file " << CONFIGURATIONFILENAME << endl;
     }
   }
   configFileIs.close();
 
   //ask here for bin directory for backward compatibility of the install script
-  if(!binFound&&layoutFound&&xmlFound&&momentaFound&&triggerMomentaFound&&thresholdProbabilitiesFound){
+  if(!binFound&&layoutFound&&xmlFound){
     askBinDirectory();
     if (checkDirectory(binDirectory_)) {
       configFileOs.open(configFileName.c_str(), ifstream::app);
@@ -270,7 +196,7 @@ bool mainConfigHandler::readConfigurationFile(string& configFileName) {
     cout << endl;
   }
 
-  return (binFound&&layoutFound&&xmlFound&&momentaFound&&triggerMomentaFound&&thresholdProbabilitiesFound);
+  return (binFound&&layoutFound&&xmlFound);
 }
 
 bool mainConfigHandler::getConfiguration(bool checkDirExists /* = true */) {
@@ -331,21 +257,6 @@ bool mainConfigHandler::readConfiguration( bool checkDirExists ) {
 
   goodConfigurationRead_ = goodConfig;
   return goodConfig;
-}
-
-vector<double>& mainConfigHandler::getMomenta() {
-  getConfiguration();
-  return momenta_;
-}
-
-vector<double>& mainConfigHandler::getTriggerMomenta() {
-  getConfiguration();
-  return triggerMomenta_;
-}
-
-vector<double>& mainConfigHandler::getThresholdProbabilities() {
-  getConfiguration();
-  return thresholdProbabilities_;
 }
 
 string mainConfigHandler::getBinDirectory() {

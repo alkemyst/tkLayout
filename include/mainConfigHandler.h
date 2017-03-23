@@ -22,9 +22,12 @@ using namespace std;
 #define BINDIRECTORYDEFINITION "TKG_BINDIRECTORY"
 #define LAYOUTDIRECTORYDEFINITION "TKG_LAYOUTDIRECTORY" 
 #define STANDARDDIRECTORYDEFINITION "TKG_STANDARDDIRECTORY" 
+
+// Obsolete parameters
 #define MOMENTADEFINITION "TKG_MOMENTA" 
 #define TRIGGERMOMENTADEFINITION "TKG_TRIGGERMOMENTA" 
 #define THRESHOLDPROBABILITIESDEFINITION "TKG_THRESHOLD_PROB"
+
 
 class ConfigInputOutput {
 public:
@@ -66,9 +69,6 @@ public:
   string getGeometriesDirectory();
   string getConfigFileName();
   std::set<string> preprocessConfiguration(ConfigInputOutput);
-  vector<double>& getMomenta();
-  vector<double>& getTriggerMomenta();
-  vector<double>& getThresholdProbabilities();
 private:
   bool goodConfigurationRead_;
   //string styleDirectory_;
@@ -76,16 +76,10 @@ private:
   string layoutDirectory_;
   //string xmlDirectory_;
   string standardDirectory_;
-  vector<double> momenta_;
-  vector<double> triggerMomenta_;
-  vector<double> thresholdProbabilities_;
   bool checkDirectory(string dirName) ;
   void askBinDirectory();
   void askLayoutDirectory();
   void askStandardDirectory();
-  void askMomenta();
-  void askTriggerMomenta();
-  void askThresholdProbabilities();
   bool createConfigurationFileFromQuestions(string& configFileName);
   bool parseLine(const char* codeLine, string& parameter, string& value);
   bool readConfigurationFile(string& configFileName);
