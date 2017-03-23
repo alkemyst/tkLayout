@@ -81,8 +81,8 @@ class ptError {
 //   double stripsToP(double strips);
 //   double pToStrips(double p);
    // Error computation
-   double computeErrorBE(double p); // CUIDADO only for testing, called by computeError after previously setting the correct parameters
-   double computeError(double p);
+   double computeRelativeErrorBE(double p); // CUIDADO only for testing, called by computeError after previously setting the correct parameters
+   double computeRelativeError(double p);
    // Efficiency computation
    double probabilityInside(double cut, double value, double value_err);
 };

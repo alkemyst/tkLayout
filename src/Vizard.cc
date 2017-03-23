@@ -4653,8 +4653,7 @@ namespace insur {
     TLegend* legendPtInOut = new TLegend(0.11,0.66,0.36,0.89,"p_{T} options (InOut+IP, full TRK):");
     legendPtInOut->SetTextSize(0.025);
 
-    for (const auto& pIter : mainConfig.getMomenta()) {
-
+    for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
       a.hisPatternRecoInOutPt[iMomentum]->SetNameTitle(std::string("hisPatternRecoInOutPt"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
       a.hisPatternRecoInOutPt[iMomentum]->SetLineWidth(2.);
       a.hisPatternRecoInOutPt[iMomentum]->SetMarkerStyle(21);
@@ -4695,7 +4694,7 @@ namespace insur {
       canvasPtD0InOut.SetFillColor(color_plot_background);
       canvasPtD0InOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPtD0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -4738,7 +4737,7 @@ namespace insur {
       canvasPtZ0InOut.SetFillColor(color_plot_background);
       canvasPtZ0InOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPtZ0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -4778,7 +4777,7 @@ namespace insur {
       canvasPtProbContamInOut.SetFillColor(color_plot_background);
       canvasPtProbContamInOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPtProbContamInOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());
@@ -4826,7 +4825,7 @@ namespace insur {
     TLegend* legendPInOut = new TLegend(0.11,0.66,0.36,0.89,"p options (InOut+IP, full TRK):");
     legendPInOut->SetTextSize(0.025);
 
-    for (const auto& pIter : mainConfig.getMomenta()) {
+    for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
       a.hisPatternRecoInOutP[iMomentum]->SetNameTitle(std::string("hisPBkgContInOut"+any2str(iMomentum)).c_str(),"In-Out: Bkg contamination prob. in 95% area of 2D error ellipse accumulated accross N layers;#eta;1 - #Pi_{i=1}^{N} (1-p^{i}_{bkg_95%})");
       a.hisPatternRecoInOutP[iMomentum]->SetLineWidth(2.);
@@ -4868,7 +4867,7 @@ namespace insur {
       canvasPD0InOut.SetFillColor(color_plot_background);
       canvasPD0InOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPD0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{R-#Phi} from previous layers/discs;#eta; #sigma_{R-#Phi} [#mum]").c_str());
@@ -4911,7 +4910,7 @@ namespace insur {
       canvasPZ0InOut.SetFillColor(color_plot_background);
       canvasPZ0InOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPZ0InOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: an extrapolated #sigma_{Z} from previous layers/discs;#eta; #sigma_{Z} [#mum]").c_str());
@@ -4953,7 +4952,7 @@ namespace insur {
       canvasPProbContamInOut.SetFillColor(color_plot_background);
       canvasPProbContamInOut.SetObjectStat(false);
 
-      for (const auto& pIter : mainConfig.getMomenta()) {
+      for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
         auto & profHis = iterMap.second;
         profHis[iMomentum]->SetNameTitle(std::string("canvasPProbContamInOut"+name+any2str(iMomentum)).c_str(),std::string(name+" In-Out approach: bkg contamination prob. as error ellipse extrap. from previous layers/discs;#eta; probability").c_str());

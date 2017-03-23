@@ -22,7 +22,7 @@ SimParms {
     numTriggerTowersEta 6
     numTriggerTowersPhi 8
 
-    resolutionMomenta   1e3, 10e3, 100e3             // in MeV/c
+    resolutionMomenta   1e3,10e3,100e3             // in MeV/c
     triggerMomenta	1e3, 1.5e3, 2e3, 2.5e3, 5e3  // in MeV/c
     triggerEfficiencies 0.01, 0.50, 0.90, 0.95  
 

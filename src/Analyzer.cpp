@@ -102,33 +102,7 @@ namespace insur {
     return totalMaterial;
   }
 
-
-  /* TODO: finish this :-)
-void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> materialBudgets,
-                                           int etaSteps,
-                                           double maxEta,
-                                           bool forceClean = false) {
-  
-  if (forceClean) taggedTrackCollectionMap_.clear();
-  if (taggedTrackCollectionMap_.size()!=0) return;
-    
-  double etaStep, eta, theta, phi;
-  
-  // prepare etaStep, phiStep, nTracks, nScans
-  if (etaSteps > 1) etaStep = maxEta / (double)(etaSteps - 1);
-  else etaStep = maxEta;
-  const int nTracks& = etaSteps;
-
-  
-        
-}
-    
-  */                                
-
   void Analyzer::analyzeTaggedTracking(MaterialBudget& mb,
-				       const std::vector<double>& momenta,
-				       const std::vector<double>& triggerMomenta,
-				       const std::vector<double>& thresholdProbabilities,
 				       bool isPixel,
 				       bool& debugResolution,
 				       int etaSteps,
@@ -140,18 +114,14 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
   materialTracksUsed = etaSteps;
 
   int nTracks;
-  double etaStep, eta, theta, phi, zPos;
+  double etaStep, eta, theta, phi;
 
   // prepare etaStep, phiStep, nTracks, nScans
   if (etaSteps > 1) etaStep = getEtaMaxTrigger() / (double)(etaSteps - 1);
   else etaStep = getEtaMaxTrigger();
   nTracks = etaSteps;
 
-  // prepareTriggerPerformanceHistograms(nTracks, getEtaMaxTrigger(), triggerMomenta, thresholdProbabilities);
-
   // reset the list of tracks
-  //std::map<string, std::vector<Track>> tv;
-  //std::map<string, std::vector<Track>> tvIdeal;
   std::map<std::string, TrackNewCollectionMap> taggedTrackPtCollectionMap;
   std::map<std::string, TrackNewCollectionMap> taggedTrackPCollectionMap;
   std::map<std::string, TrackNewCollectionMap> taggedTrackPtCollectionMapIdeal;
@@ -164,7 +134,6 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
     TrackNew track;
     eta = i_eta * etaStep;
     theta = 2 * atan(exp(-eta));
-    //std::cout << " track's phi = " << phi << std::endl; 
     track.setThetaPhiPt(theta,phi,1*Units::TeV);
     track.setOrigin(0., 0., 0.); // TODO: Not assuming z-error when analyzing resolution (missing implementation of non-zero track starting point in inactive hits)
     //track.setTheta(theta);
@@ -211,7 +180,7 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
 
         if (efficiency!=1) track.addEfficiency(efficiency);
         // For each momentum/transverse momentum compute the tracks error
-        for (const auto& pIter : momenta ) {
+        for (const auto& pIter : SimParms::getInstance().resolutionMomenta ) {
           int    parameter = pIter/Units::MeV; // Store p or pT in MeV as int (key to the map)
           double momentum  = pIter;
 
@@ -326,8 +295,6 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
    * @param etaSteps The number of wedges in the fan of tracks covered by the eta scan
    */
   void Analyzer::analyzeTriggerEfficiency(Tracker& tracker,
-                                          const std::vector<double>& triggerMomenta,
-                                          const std::vector<double>& thresholdProbabilities,
                                           int etaSteps) {
 
     auto& simParms = SimParms::getInstance();
@@ -344,7 +311,7 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
     else etaStep = getEtaMaxTrigger();
     nTracks = etaSteps;
 
-    prepareTriggerPerformanceHistograms(nTracks, getEtaMaxTrigger(), triggerMomenta, thresholdProbabilities);
+    prepareTriggerPerformanceHistograms(nTracks, getEtaMaxTrigger());
 
     // reset the list of tracks
     std::vector<Track> tv;
@@ -379,7 +346,7 @@ void Analyzer::createTaggedTrackCollection(std::vector<MaterialBudget*> material
     }
 
     // Compute the number of triggering points along the selected tracks
-    fillTriggerEfficiencyGraphs(tracker, triggerMomenta, tv);
+    fillTriggerEfficiencyGraphs(tracker, tv);
 
     // Fill the trigger performance maps
     fillTriggerPerformanceMaps(tracker);
@@ -462,8 +429,7 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
   else {
 
     // Prepare histograms
-    for (const auto& pIter : mainConfig.getMomenta()) {
-
+    for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
       // In-Out
       std::string name = "hisBkgContInOut_pT"+any2str(pIter/Units::GeV);
       hisPatternRecoInOutPt.push_back(new TProfile(name.c_str(),name.c_str(),nBins, 0, geom_max_eta_coverage));
@@ -507,7 +473,7 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
 
     // For each momentum/transverse momentum compute
     int iMomentum = 0;
-    for (const auto& pIter : mainConfig.getMomenta()) {
+    for (const double& pIter : SimParms::getInstance().resolutionMomenta ) {
 
       // 2 options: pT & p
       for (int pOption=0;pOption<2;pOption++) {
@@ -548,8 +514,6 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
             // Start with triplet coming from 3 different layers -> avoid using 2 close measurements from overlapping modules in 1 layer
             if (testTriplet && !isTripletFromDifLayers(track, iHit, propagOutIn)) continue;
             else testTriplet = false;
-
-            int nHitsUsed = iHit+1; // (C counting from zero)
 
             // Keep first/last N hits (based on approach) and find paramaters of the next hit
             double nextRPos    = 0;
@@ -623,7 +587,7 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
 
               // Create profile histograms if don't exist yet
               if (hisPtHitDProjInOut.find(iHitIDMap)==hisPtHitDProjInOut.end()) {
-                for (int iMom=0; iMom<mainConfig.getMomenta().size(); iMom++) {
+                for (int iMom=0; iMom<SimParms::getInstance().resolutionMomenta.size(); iMom++) {
 
                   std::string name = "hisPt_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjInOut";
                   hisPtHitDProjInOut[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),nBins, 0, geom_max_eta_coverage));
@@ -644,7 +608,7 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
 
               // Create profile histograms if don't exist yet
               if (hisPHitDProjInOut.find(iHitIDMap)==hisPHitDProjInOut.end()) {
-                for (int iMom=0; iMom<mainConfig.getMomenta().size(); iMom++) {
+                for (int iMom=0; iMom<SimParms::getInstance().resolutionMomenta.size(); iMom++) {
 
                   std::string name = "hisP_" + any2str(iMom) + "_Hit_" + iHitID + "_DProjInOut";
                   hisPHitDProjInOut[iHitIDMap].push_back(new TProfile(name.c_str(),name.c_str(),nBins, 0, geom_max_eta_coverage));
@@ -666,7 +630,7 @@ bool Analyzer::analyzePatterReco(MaterialBudget& mb, mainConfigHandler& mainConf
           //
           // Calculate total contamination based on different options: p/pT, in-out/out-in
           double pContamTot      = 1-pNotContamTot;
-          double pContamInnerTot = 1-pNotContamTotInner;
+          // double pContamInnerTot = 1-pNotContamTotInner;
           if (pOption==0) {
 
             if (approachOption==0) {
@@ -718,9 +682,8 @@ void Analyzer::fillAvailableSpacing(Tracker& tracker, std::vector<double>& spaci
 
 }
 
-void Analyzer::createTriggerDistanceTuningPlots(Tracker& tracker, const std::vector<double>& triggerMomenta) {
-  TriggerDistanceTuningPlotsVisitor v(myProfileBag, 
-                                      triggerMomenta);
+void Analyzer::createTriggerDistanceTuningPlots(Tracker& tracker) {
+  TriggerDistanceTuningPlotsVisitor v(myProfileBag);
   SimParms::getInstance().accept(v);
   tracker.accept(v);
   v.postVisit();
@@ -740,11 +703,9 @@ void Analyzer::createTriggerDistanceTuningPlots(Tracker& tracker, const std::vec
 
 
 void Analyzer::fillTriggerEfficiencyGraphs(const Tracker& tracker,
-                                           const std::vector<double>& triggerMomenta,
                                            const std::vector<Track>& trackVector) {
 
   // Prepare the graphs to record the number of triggered points
-  //std::map<double, TGraph>& trigGraphs = myGraphBag.getGraphs(GraphBag::TriggerGraph|GraphBag::TriggeredGraph);
   std::map<double, TProfile>& trigProfiles = myProfileBag.getProfiles(profileBag::TriggerProfile|profileBag::TriggeredProfile);
   std::map<double, TProfile>& trigFractionProfiles = myProfileBag.getProfiles(profileBag::TriggerProfile|profileBag::TriggeredFractionProfile);
   std::map<double, TProfile>& trigPurityProfiles = myProfileBag.getProfiles(profileBag::TriggerProfile|profileBag::TriggerPurityProfile);
@@ -764,12 +725,11 @@ void Analyzer::fillTriggerEfficiencyGraphs(const Tracker& tracker,
     totalProfile.Fill(eta, nHits);
     std::vector<std::pair<Module*,HitType>> hitModules = myTrack.getHitModules();
 
-    for(std::vector<double>::const_iterator itMomentum = triggerMomenta.begin();
-        itMomentum!=triggerMomenta.end(); ++itMomentum) {
-      TProfile& myProfile = trigProfiles[(*itMomentum)];
-      TProfile& myFractionProfile = trigFractionProfiles[(*itMomentum)];
-      TProfile& myPurityProfile = trigPurityProfiles[(*itMomentum)];
-      double nExpectedTriggerPoints = myTrack.expectedTriggerPoints(*itMomentum);
+    for (const double& myPt : SimParms::getInstance().triggerMomenta ) {
+      TProfile& myProfile = trigProfiles[(myPt)];
+      TProfile& myFractionProfile = trigFractionProfiles[(myPt)];
+      TProfile& myPurityProfile = trigPurityProfiles[(myPt)];
+      double nExpectedTriggerPoints = myTrack.expectedTriggerPoints(myPt);
       if (nExpectedTriggerPoints>=0) { // sanity check (! nan)
         myProfile.Fill(eta, nExpectedTriggerPoints);
         if (nHits>0) {
@@ -782,19 +742,19 @@ void Analyzer::fillTriggerEfficiencyGraphs(const Tracker& tracker,
              Module* hitModule = modAndType.first;
              PtErrorAdapter pterr(*hitModule);
              // Hits that we would like to have from tracks above this threshold
-             curAvgInteresting += pterr.getParticleFrequencyPerEventAbove(*itMomentum);
+             curAvgInteresting += pterr.getParticleFrequencyPerEventAbove(myPt);
              // ... out of which we only see these
-             curAvgTrue += pterr.getTriggerFrequencyTruePerEventAbove(*itMomentum);
+             curAvgTrue += pterr.getTriggerFrequencyTruePerEventAbove(myPt);
                
              // The background is given by the contamination from low pT tracks...
-             curAvgFake += pterr.getTriggerFrequencyTruePerEventBelow(*itMomentum);
+             curAvgFake += pterr.getTriggerFrequencyTruePerEventBelow(myPt);
              // ... plus the combinatorial background from occupancy (can be reduced using ptPS modules)
              if (hitModule->reduceCombinatorialBackground()) bgReductionFactor = hitModule->geometricEfficiency(); else bgReductionFactor=1;
              curAvgFake += pterr.getTriggerFrequencyFakePerEvent()*SimParms::getInstance().numMinBiasEvents() * bgReductionFactor;
 
              std::string layerName = hitModule->uniRef().cnt + "_" + any2str(hitModule->uniRef().layer);
              if (modAndType.second == HitType::STUB) {
-               std::string momentumString = any2str(*itMomentum, 2);
+               std::string momentumString = any2str(myPt, 2);
                if (stubEfficiencyCoverageProfiles[layerName].count(momentumString) == 0) {
                  stubEfficiencyCoverageProfiles[layerName][momentumString] = new TH1I(Form("stubEfficiencyCoverageProfile%s%s", layerName.c_str(), momentumString.c_str()), (layerName + ";#eta;Stubs").c_str(), trackVector.size(), 0.0, maxEta); 
                }
@@ -826,7 +786,7 @@ void Analyzer::fillTriggerEfficiencyGraphs(const Tracker& tracker,
  * @param etaSteps The number of wedges in the fan of tracks covered by the eta scan
  * @param A pointer to a second material budget associated to a pixel detector; may be <i>NULL</i>
  */
-void Analyzer::analyzeMaterialBudget(MaterialBudget& mb, const std::vector<double>& momenta, int etaSteps,
+void Analyzer::analyzeMaterialBudget(MaterialBudget& mb, int etaSteps,
                                      MaterialBudget* pm) {
 
   Tracker& tracker = mb.getTracker();
@@ -2733,7 +2693,7 @@ void Analyzer::fillTriggerPerformanceMaps(Tracker& tracker) {
  * @parameter triggerMomenta the vector of pt to test the trigger
  */
 
-void Analyzer::prepareTriggerPerformanceHistograms(const int& nTracks, const double& myEtaMax, const std::vector<double>& triggerMomenta, const std::vector<double>& thresholdProbabilities) {
+void Analyzer::prepareTriggerPerformanceHistograms(const int& nTracks, const double& myEtaMax) {
   // Clean-up and prepare the trigger performance maps
   myMapBag.clearMaps(mapBag::efficiencyMap);
   myMapBag.clearMaps(mapBag::thresholdMap);
@@ -2749,20 +2709,18 @@ void Analyzer::prepareTriggerPerformanceHistograms(const int& nTracks, const dou
   // PT Threshold maps here
   ostringstream tempSS;
   // string tempString;
-  for (std::vector<double>::const_iterator it = thresholdProbabilities.begin();
-       it!=thresholdProbabilities.end(); ++it) {
-    TH2D& myMap = thresholdMaps[(*it)];
+  for (const double& prob : SimParms::getInstance().triggerEfficiencies ) {
+    TH2D& myMap = thresholdMaps[prob];
     tempSS.str("");
-    tempSS << "ptThresholdMap_" << std::dec << (*it) * 100 << "perc";
+    tempSS << "ptThresholdMap_" << std::dec << prob * 100 << "perc";
     prepareTrackerMap(myMap, tempSS.str(), tempSS.str());
   }
 
   // Efficiency maps here
-  for (std::vector<double>::const_iterator it = triggerMomenta.begin();
-       it!=triggerMomenta.end(); ++it) {
-    TH2D& myMap = efficiencyMaps[(*it)];
+  for (const double& pT : SimParms::getInstance().triggerMomenta ) {
+    TH2D& myMap = efficiencyMaps[pT];
     tempSS.str("");
-    tempSS << "triggerEfficiencyMap_" << std::dec << (*it) << "GeV";
+    tempSS << "triggerEfficiencyMap_" << std::dec << pT/Units::GeV << "GeV";
     prepareTrackerMap(myMap, tempSS.str(), tempSS.str());
   }
 
@@ -2797,38 +2755,32 @@ void Analyzer::prepareTriggerPerformanceHistograms(const int& nTracks, const dou
 
   // TODO: tune this parameter
   int nbins = int(nTracks/10.);
-  for (vector<double>::const_iterator iter = triggerMomenta.begin();
-       iter != triggerMomenta.end();
-       ++iter) {
+  for (const double& myPt : SimParms::getInstance().triggerMomenta ) {
     //std::pair<double, TGraph> elemGraph;
     std::pair<double, TProfile> elemProfile;
     std::pair<double, TProfile> elemFractionProfile;
     std::pair<double, TProfile> elemPurityProfile;
     //TGraph graph;
     TProfile profile("dummyName", "dummyTitle", nbins, 0, myEtaMax);
-    //elemGraph.first = *iter;
-    //elemGraph.second = graph;
-    elemProfile.first = *iter;
+    elemProfile.first = myPt;
     elemProfile.second = profile;
-    elemFractionProfile.first = *iter;
+    elemFractionProfile.first = myPt;
     elemFractionProfile.second = profile;
-    elemPurityProfile.first = *iter;
+    elemPurityProfile.first = myPt;
     elemPurityProfile.second = profile;
     // Prepare plots: triggered graphs
-    // trigGraphs.insert(elemGraph);
     trigProfiles.insert(elemProfile);
     trigFractionProfiles.insert(elemFractionProfile);
     trigPurityProfiles.insert(elemPurityProfile);
-    // trigGraphs[*iter].SetTitle("Average triggered points;#eta;Triggered points <N>");
-    trigProfiles[*iter].SetTitle("Average triggered points;#eta;Triggered points <N>");
-    trigFractionProfiles[*iter].SetTitle("Average trigger efficiency;#eta;Efficiency [%]");
-    trigPurityProfiles[*iter].SetTitle("Average stub purity;#eta;Purity [%]");
-    aName.str(""); aName << "triggered_vs_eta" << *iter << "_profile";      
-    trigProfiles[*iter].SetName(aName.str().c_str());
-    aName.str(""); aName << "triggered_vs_eta" << *iter << "_fractionProfile";
-    trigFractionProfiles[*iter].SetName(aName.str().c_str());
-    aName.str(""); aName << "triggered_vs_eta" << *iter << "_purityProfile";
-    trigPurityProfiles[*iter].SetName(aName.str().c_str());
+    trigProfiles[myPt].SetTitle("Average triggered points;#eta;Triggered points <N>");
+    trigFractionProfiles[myPt].SetTitle("Average trigger efficiency;#eta;Efficiency [%]");
+    trigPurityProfiles[myPt].SetTitle("Average stub purity;#eta;Purity [%]");
+    aName.str(""); aName << "triggered_vs_eta" << myPt << "_profile";      
+    trigProfiles[myPt].SetName(aName.str().c_str());
+    aName.str(""); aName << "triggered_vs_eta" << myPt << "_fractionProfile";
+    trigFractionProfiles[myPt].SetName(aName.str().c_str());
+    aName.str(""); aName << "triggered_vs_eta" << myPt << "_purityProfile";
+    trigPurityProfiles[myPt].SetName(aName.str().c_str());
   }
 
   //std::pair<double, TGraph> elemTotalGraph;

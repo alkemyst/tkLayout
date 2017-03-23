@@ -40,7 +40,7 @@ double PtErrorAdapter::getTriggerProbability(const double& trackPt, const double
   double pt_cut = stripsToP(thisTriggerWindow/2.);
   // Error on curvatre is the relative error of trackPt times the
   // curvature (cur = 1/pt)
-  double cur_error = myPtError.computeError(trackPt) / trackPt; 
+  double cur_error = myPtError.computeRelativeError(trackPt); 
   double result;
   result = myPtError.probabilityInside(1/pt_cut, 1/trackPt, cur_error) * mod_.geometricEfficiency();
   // std::cerr << "trigger prob @ " << trackPt << " GeV/c is " << result <<std::endl; // debug
@@ -148,8 +148,8 @@ double PtErrorAdapter::find_probability(double target, double ptCut) {
   double lowerPt = minimumPt;
   double higherPt = maximumPt;
 
-  double lowerProbability =  mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/lowerPt, myPtError.computeError(lowerPt)/lowerPt);
-  double higerProbability =  mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/higherPt, myPtError.computeError(higherPt)/higherPt);
+  double lowerProbability =  mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/lowerPt, myPtError.computeRelativeError(lowerPt));
+  double higerProbability =  mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/higherPt, myPtError.computeRelativeError(higherPt));
 
   double testPt;
   double testProbability;
@@ -165,7 +165,7 @@ double PtErrorAdapter::find_probability(double target, double ptCut) {
     //std::cerr << std::endl;
     //std::cerr << "****** STEP # " << i << "*********" << std::endl;
     testPt = sqrt(lowerPt*higherPt);
-    testProbability = mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/testPt, myPtError.computeError(testPt)/testPt);
+    testProbability = mod_.geometricEfficiency() * myPtError.probabilityInside(1/ptCut, 1/testPt, myPtError.computeRelativeError(testPt));
     //std::cerr << "Geometric efficiency is " << geometricEfficiency() << std::endl;
     //std::cerr << "LO: prob("<<lowerPt<<") = " << lowerProbability << std::endl;
     //std::cerr << "HI: prob("<<higherPt<<") = " << higerProbability << std::endl;

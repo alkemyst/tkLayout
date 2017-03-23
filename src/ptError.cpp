@@ -4,6 +4,7 @@
 #include <ptError.h>
 #include <global_constants.h>
 #include "SimParms.h"
+#include "Units.h"
 
 using namespace std;
 
@@ -23,12 +24,11 @@ void ptError::defaultParameters() {
   endcapType = ModuleShape::RECTANGULAR; // Barrel is the default moduleType 
 }
 
-double ptError::computeErrorBE(double p) {
+double ptError::computeRelativeErrorBE(double p_standardUnits) {
+  double p = p_standardUnits / Units::GeV; // we perform calculations in GeV inside this function
   double A = 0.3 * SimParms::getInstance().magField() * Module_r / 1000. / 2.; // GeV
   double a = pow(p/A,2);
   double g = 1/a;
-  //std::cout << "g = " << g << std::endl;
-  //std::cout << "a = " << a << std::endl;
 
   double one_over_sin_cos = (Module_z/Module_r) + (Module_r/Module_z);
 
@@ -104,19 +104,20 @@ double ptError::computeErrorBE(double p) {
     std::cerr << "Error: in TODO:addFunctionNameHere"
 	      << "I just found a module which is neither Barrel nor Endcap" << std::endl;
   }
-
-  return sqrt(relativeError2);
+  double result_GeV = sqrt(relativeError2);
+  
+  return result_GeV/p;
 }
 
-double ptError::computeError(double p) { // CUIDADO TODO this should be refactored (remove type checks!), but we have to refit the new occupancy data first
+double ptError::computeRelativeError(double p) { // CUIDADO TODO this should be refactored (remove type checks!), but we have to refit the new occupancy data first
   if (moduleType == BARREL && fabs(Module_tilt) > 1e-3) {
-    double errB = computeErrorBE(p);
+    double errB = computeRelativeErrorBE(p);
     moduleType = ENDCAP;
-    double errE = computeErrorBE(p);
+    double errE = computeRelativeErrorBE(p);
     moduleType = BARREL;
     return errB*pow(cos(Module_tilt),2) + errE*pow(sin(Module_tilt),2);
   } else {
-    return computeErrorBE(p);
+    return computeRelativeErrorBE(p);
   }
 }
 

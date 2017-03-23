@@ -15,7 +15,7 @@
 #include "Visitor.h"
 #include "Bag.h"
 #include "SummaryTable.h"
-
+#include "Units.h"
 
 typedef std::map<const DetectorModule*, std::map<int, double> > ModuleOptimalSpacings;
 
@@ -24,7 +24,6 @@ class TriggerDistanceTuningPlotsVisitor : public ConstGeometryVisitor {
   typedef std::vector<const DetectorModule*> ModuleVector;
   std::map<std::string, ModuleVector> selectedModules_;
   std::set<double> foundSpacing_;
-  const std::vector<double>& triggerMomenta_;
   const unsigned int nWindows_ = 5;
 
   profileBag& myProfileBag_;
@@ -73,10 +72,8 @@ public:
   std::map<int, TGraphErrors> spacingTuningGraphs; // TODO: find a way to communicate the limits, not their plots!
   std::map<int, TGraphErrors> spacingTuningGraphsBad; // TODO: find a way to communicate the limits, not their plots!
 
-  TriggerDistanceTuningPlotsVisitor(profileBag& myProfileBag,
-                                    const std::vector<double>& triggerMomenta) :
-    myProfileBag_(myProfileBag),
-    triggerMomenta_(triggerMomenta) 
+   TriggerDistanceTuningPlotsVisitor(profileBag& myProfileBag) :
+    myProfileBag_(myProfileBag)
   {
 
     /************************************************/
@@ -121,12 +118,12 @@ public:
     //  Profiles
     if (!preparedProfiles_[myName]) {
       preparedProfiles_[myName] = true;
-      for (std::vector<double>::const_iterator it=triggerMomenta_.begin(); it!=triggerMomenta_.end(); ++it) {
+      for (const auto& trig_pT : SimParms::getInstance().triggerMomenta ) {
         std::ostringstream tempSS; tempSS << "Trigger efficiency for " << myName.c_str() << ";Sensor spacing [mm];Efficiency [%]";
-        tuningProfiles[*it].SetTitle(tempSS.str().c_str());
-        tempSS.str(""); tempSS << "TrigEff" << myName.c_str() << "_" << (*it) << "GeV";
-        tuningProfiles[*it].SetName(tempSS.str().c_str());
-        tuningProfiles[*it].SetBins(100, 0.5, 6); // TODO: these numbers should go into some kind of const
+        tuningProfiles[trig_pT].SetTitle(tempSS.str().c_str());
+        tempSS.str(""); tempSS << "TrigEff" << myName.c_str() << "_" << trig_pT/Units::GeV << "GeV";
+        tuningProfiles[trig_pT].SetName(tempSS.str().c_str());
+        tuningProfiles[trig_pT].SetBins(100, 0.5, 6); // TODO: these numbers should go into some kind of const
       }     
     }
 
@@ -152,8 +149,7 @@ public:
 
     // Fill the tuning profiles for the windows actually set
     for (double dist=0.5; dist<=6; dist+=0.02) {
-      for (std::vector<double>::const_iterator it=triggerMomenta_.begin(); it!=triggerMomenta_.end(); ++it) {
-        double myPt = (*it);
+      for (const double& myPt : SimParms::getInstance().triggerMomenta ) {
         double myValue = 100 * pterr.getTriggerProbability(myPt, dist);
         if ((myValue>=0) && (myValue<=100))
           tuningProfiles[myPt].Fill(dist, myValue);
@@ -198,12 +194,12 @@ public:
     // Tuning profile
     if (!preparedProfiles_[myName]) {
       preparedProfiles_[myName] = true;
-      for (std::vector<double>::const_iterator it=triggerMomenta_.begin(); it!=triggerMomenta_.end(); ++it) {
+      for (const double& myPt : SimParms::getInstance().triggerMomenta ) {
         std::ostringstream tempSS; tempSS << "Trigger efficiency for " << myName.c_str() << " GeV;Sensor spacing [mm];Efficiency [%]";
-        tuningProfiles[*it].SetTitle(tempSS.str().c_str());
-        tempSS.str(""); tempSS << "TrigEff" << myName.c_str() << "_" << (*it);
-        tuningProfiles[*it].SetName(tempSS.str().c_str());
-        tuningProfiles[*it].SetBins(100, 0.5, 6); // TODO: these numbers should go into some kind of const
+        tuningProfiles[myPt].SetTitle(tempSS.str().c_str());
+        tempSS.str(""); tempSS << "TrigEff" << myName.c_str() << "_" << (myPt);
+        tuningProfiles[myPt].SetName(tempSS.str().c_str());
+        tuningProfiles[myPt].SetBins(100, 0.5, 6); // TODO: these numbers should go into some kind of const
       }
     }
 
@@ -224,8 +220,7 @@ public:
 
     // Fill the tuning profiles for the windows actually set
     for (double dist=0.5; dist<=6; dist+=0.02) {
-      for (std::vector<double>::const_iterator it=triggerMomenta_.begin(); it!=triggerMomenta_.end(); ++it) {
-        double myPt = (*it);
+      for (const double& myPt : SimParms::getInstance().triggerMomenta ) {
         double myValue = 100 * pterr.getTriggerProbability(myPt, dist);
         if ((myValue>=0) && (myValue<=100))
           tuningProfiles[myPt].Fill(dist, myValue);

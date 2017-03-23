@@ -31,6 +31,7 @@ COMPILERFLAGS+=-lstdc++
 COMPILERFLAGS+=-fmax-errors=2
 #COMPILERFLAGS+=-pg
 #COMPILERFLAGS+=-Werror
+#COMPILERFLAGS+=-Wunused
 #COMPILERFLAGS+=-O5
 LINKERFLAGS+=-Wl,--copy-dt-needed-entries
 #LINKERFLAGS+=-pg

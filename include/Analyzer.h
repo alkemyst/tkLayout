@@ -420,12 +420,11 @@ namespace insur {
                                const string& graphTag);
     void calculateParametrizedResolutionPlots(std::map<std::string, TrackNewCollectionMap>& taggedTrackPtCollectionMap);
     void fillTriggerEfficiencyGraphs(const Tracker& tracker,
-                                     const std::vector<double>& triggerMomenta,
                                      const std::vector<Track>& trackVector);
     void fillTriggerPerformanceMaps(Tracker& tracker);
     //void fillPowerMap(Tracker& tracker);
     void clearMaterialBudgetHistograms();
-    void prepareTriggerPerformanceHistograms(const int& nTracks, const double& etaMax, const vector<double>& triggerMomenta, const vector<double>& thresholdProbabilities);
+    void prepareTriggerPerformanceHistograms(const int& nTracks, const double& etaMax);
     void prepareTriggerProcessorHistograms();
     void clearGeometryHistograms();
     void clearCells();
