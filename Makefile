@@ -27,6 +27,7 @@ COMPILERFLAGS+=-std=c++17
 COMPILERFLAGS+=-Wall
 COMPILERFLAGS+=-Werror
 COMPILERFLAGS+=-fmax-errors=2
+COMPILERFLAGS+=-Wno-range-loop-construct
 #COMPILERFLAGS+=-Wextra
 #COMPILERFLAGS+=-pedantic
 COMPILERFLAGS+=-g

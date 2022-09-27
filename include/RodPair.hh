@@ -160,6 +160,7 @@ public:
   Property<bool, Default> allowCompressionCuts;
 
   Property<bool, Default> isFlatPart;
+  MultiProperty<std::vector<double>, ','> modZList;
 
   PropertyNode<int> ringNode;
   
@@ -174,6 +175,7 @@ public:
               compressed          ("compressed"          , parsedOnly(), true),
               allowCompressionCuts("allowCompressionCuts", parsedOnly(), true),
 	      isFlatPart          ("isFlatPart"          , parsedOnly(), false),
+        modZList       ("modZList"       , parsedOnly()),
 	      ringNode            ("Ring"                , parsedOnly())
   {}
 

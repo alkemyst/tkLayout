@@ -304,6 +304,15 @@ template<typename Iterator> pair<vector<double>, vector<double>> StraightRodPair
   bool fixedStartZ = true;
   vector<double> zPlusList = computeZList(begin, end, startZ, BuildDir::RIGHT, zPlusParity(), fixedStartZ);
   vector<double> zMinusList = computeZList(begin, end, startZ, BuildDir::LEFT, -zPlusParity(), !fixedStartZ);
+  if (modZList.state()) {
+    std::cerr << "Plus list ";
+    for (auto it : zPlusList) std::cerr << ", " << it;
+    std::cerr << std::endl;
+    std::cerr << "Minus list ";
+    for (auto it : zMinusList) std::cerr << ", " << it;
+    std::cerr << std::endl;
+  }
+
 
   double zUnbalance = 0.;
   if (!zPlusList.empty() && !zMinusList.empty()) { zUnbalance = (zPlusList.back()+(*(end-1))->length()/2) + (zMinusList.back()-(*(end-1))->length()/2); } // balancing uneven pos/neg strings
