@@ -372,14 +372,9 @@ void StraightRodPair::buildFull(const RodTemplate& rodTemplate, bool isPlusBigDe
   if (!collisionsZPlus.empty() || !collisionsZMinus.empty()) logWARNING("Some modules have been translated to avoid collisions. Check info tab");
 
   if (compressed() && maxZ.state() && currMaxZ > maxZ()) compressToZ(maxZ());
-  currMaxZ = zPlusModules_.size() > 1 ? MAX(zPlusModules_.rbegin()->planarMaxZ(), (zPlusModules_.rbegin()+1)->planarMaxZ()) : (!zPlusModules_.empty() ? zPlusModules_.rbegin()->planarMaxZ() : 0.);
-  maxZ(currMaxZ);
 
-  // We're done now. Let's print the modules midpoints:
   if (modZList.state()) {
     // Manual modification of the mod z position required
-    std::cerr << "After collision solving and compression: ";
-    std::string sep = "";
     
     // Now let's sort the module z positions what we would /like/ to have:
     std::sort(modZList.begin(), modZList.end());
@@ -408,6 +403,9 @@ void StraightRodPair::buildFull(const RodTemplate& rodTemplate, bool isPlusBigDe
       logERROR(errMsg);
     }
   }
+
+  currMaxZ = zPlusModules_.size() > 1 ? MAX(zPlusModules_.rbegin()->planarMaxZ(), (zPlusModules_.rbegin()+1)->planarMaxZ()) : (!zPlusModules_.empty() ? zPlusModules_.rbegin()->planarMaxZ() : 0.);
+  maxZ(currMaxZ);
 
 }
 
