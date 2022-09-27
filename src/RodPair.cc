@@ -112,7 +112,7 @@ void StraightRodPair::compressToZ(double z) {
     }
     Deltam = -fabs(z) - findMinZModule().planarMinZ(); 
   }  
-  if (i == 20) {
+  if (i == maxIterations) {
     logINFO("Iterative compression didn't terminate after " + any2str(maxIterations) + " iterations. Z- rod still exceeds by " + any2str(fabs(Deltam))); 
     logWARNING("Failed to compress Z- rod. Still exceeding by " + any2str(fabs(Deltam)) + ". Check info tab.");
   } else logINFO("Z- rod successfully compressed after " + any2str(i) + " iterations. Rod now only exceeds by " + any2str(fabs(Deltam)) + " mm.");
@@ -304,15 +304,6 @@ template<typename Iterator> pair<vector<double>, vector<double>> StraightRodPair
   bool fixedStartZ = true;
   vector<double> zPlusList = computeZList(begin, end, startZ, BuildDir::RIGHT, zPlusParity(), fixedStartZ);
   vector<double> zMinusList = computeZList(begin, end, startZ, BuildDir::LEFT, -zPlusParity(), !fixedStartZ);
-  if (modZList.state()) {
-    std::cerr << "Plus list ";
-    for (auto it : zPlusList) std::cerr << ", " << it;
-    std::cerr << std::endl;
-    std::cerr << "Minus list ";
-    for (auto it : zMinusList) std::cerr << ", " << it;
-    std::cerr << std::endl;
-  }
-
 
   double zUnbalance = 0.;
   if (!zPlusList.empty() && !zMinusList.empty()) { zUnbalance = (zPlusList.back()+(*(end-1))->length()/2) + (zMinusList.back()-(*(end-1))->length()/2); } // balancing uneven pos/neg strings
@@ -369,8 +360,8 @@ void StraightRodPair::buildFull(const RodTemplate& rodTemplate, bool isPlusBigDe
   std::cout << "rodTemplate.size() = " << rodTemplate.size() << std::endl;*/
   auto zListPair = computeZListPair(rodTemplate.begin(), rodTemplate.end(), startZ, 0);
 
-    // actual module creation
-    // CUIDADO log rod balancing effort
+  // actual module creation
+  // CUIDADO log rod balancing effort
   buildModules(zPlusModules_, rodTemplate, zListPair.first, BuildDir::RIGHT, isPlusBigDeltaRod, zPlusParity(), 1);
   double currMaxZ = zPlusModules_.size() > 1 ? MAX(zPlusModules_.rbegin()->planarMaxZ(), (zPlusModules_.rbegin()+1)->planarMaxZ()) : (!zPlusModules_.empty() ? zPlusModules_.rbegin()->planarMaxZ() : 0.); 
   // CUIDADO this only checks the positive side... the negative side might actually have a higher fabs(maxZ) if the barrel is long enough and there's an inversion
@@ -383,6 +374,41 @@ void StraightRodPair::buildFull(const RodTemplate& rodTemplate, bool isPlusBigDe
   if (compressed() && maxZ.state() && currMaxZ > maxZ()) compressToZ(maxZ());
   currMaxZ = zPlusModules_.size() > 1 ? MAX(zPlusModules_.rbegin()->planarMaxZ(), (zPlusModules_.rbegin()+1)->planarMaxZ()) : (!zPlusModules_.empty() ? zPlusModules_.rbegin()->planarMaxZ() : 0.);
   maxZ(currMaxZ);
+
+  // We're done now. Let's print the modules midpoints:
+  if (modZList.state()) {
+    // Manual modification of the mod z position required
+    std::cerr << "After collision solving and compression: ";
+    std::string sep = "";
+    
+    // Now let's sort the module z positions what we would /like/ to have:
+    std::sort(modZList.begin(), modZList.end());
+
+    // Let's see if they are compatible
+    if (zMinusModules_.size() + zPlusModules_.size() == modZList.size()) {
+      // They are compatible, so we will use the manually-given values
+      int iMod=0;
+      XYZVector movement(0, 0, 0);
+      // Scrolling through the negative modules from the lowest z (negative) to the highest one (around zero)
+      for (auto it = zMinusModules_.rbegin(); it < zMinusModules_.rend(); ++it) {
+        // translation to move the center of the module from the current to the desired z
+        movement.SetZ(modZList.at(iMod) - it->center().Z());
+        it->translate(movement);
+        ++iMod;
+      }
+      // Scrolling through the positive modules from the lowest z (around zero) to the highest one (positive)
+      for (auto it = zPlusModules_.begin(); it < zPlusModules_.end(); ++it) {
+        // translation to move the center of the module from the current to the desired z
+        movement.SetZ(modZList.at(iMod) - it->center().Z());
+        it->translate(movement);
+        ++iMod;
+      }
+    } else {
+      std::string errMsg = "The list of module z position length (" + std::to_string(modZList.size()) + ") does not match the number of built modules ("+std::to_string(zMinusModules_.size() + zPlusModules_.size())+")";
+      logERROR(errMsg);
+    }
+  }
+
 }
 
 void StraightRodPair::buildMezzanine(const RodTemplate& rodTemplate, bool isPlusBigDeltaRod) {
