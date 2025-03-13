@@ -413,6 +413,7 @@ namespace insur {
                                          std::vector<std::pair<double, double> >& up, std::vector<std::pair<double, double> >& down) {
 
     int first = -1; // Invalid value: it should never be used anyways
+    bool hasfirst = false;
     std::pair<double, double> rz;
     double rmin = 0.0, rmax = 0.0, zmax = 0.0;
     up.clear();
@@ -426,7 +427,6 @@ namespace insur {
     auto el = lagg.getEndcapLayers();
     int layer = 1;
     int n_of_layers = el->size();
-    bool hasfirst = false;
 
     //lagg.postVisit();   
     //std::vector<std::vector<ModuleCap> >& ec = lagg.getEndcapCap();
@@ -460,16 +460,13 @@ namespace insur {
 	}
       }
 
-      if (!hasfirst) {
-        if (lzmax > 0) {
-		first = layer;
-		hasfirst = true;
-      	} else {
-		logERROR("The first layer is not set yet, and I find a lzmax<=0. This should not happen.");
-	}
+      if ((lzmax > 0) && (!hasfirst)) {
+	first = layer;
+	hasfirst = true;
       }
 
-      if ((hasfirst)&&(layer >= first)) {
+      if (!hasfirst) logERROR("I am about to use 'first' variable, but I never set it ('hasfirst' is false). This should NOT happen.");
+      if (layer >= first) {
 	if (layer == first) {
 	  rmin = lrmin;
 	  rmax = lrmax;
