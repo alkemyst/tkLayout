@@ -412,7 +412,7 @@ namespace insur {
   void Extractor::analyseEndcapContainer(std::vector<std::vector<ModuleCap> >& ec, Tracker& t, XmlTags& trackerXmlTags,
                                          std::vector<std::pair<double, double> >& up, std::vector<std::pair<double, double> >& down) {
 
-    int first;
+    int first = -1; // Invalid value: it should never be used anyways
     std::pair<double, double> rz;
     double rmin = 0.0, rmax = 0.0, zmax = 0.0;
     up.clear();
@@ -460,12 +460,16 @@ namespace insur {
 	}
       }
 
-      if ((lzmax > 0) && (!hasfirst)) {
-	first = layer;
-	hasfirst = true;
+      if (!hasfirst) {
+        if (lzmax > 0) {
+		first = layer;
+		hasfirst = true;
+      	} else {
+		logERROR("The first layer is not set yet, and I find a lzmax<=0. This should not happen.");
+	}
       }
 
-      if (layer >= first) {
+      if ((hasfirst)&&(layer >= first)) {
 	if (layer == first) {
 	  rmin = lrmin;
 	  rmax = lrmax;
