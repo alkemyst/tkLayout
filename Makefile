@@ -32,7 +32,14 @@ COMPILERFLAGS+=-fmax-errors=2
 COMPILERFLAGS+=-g
 #COMPILERFLAGS+=-ggdb
 #COMPILERFLAGS+=-pg
-#COMPILERFLAGS+=-O3
+COMPILERFLAGS+=-O3
+COMPILERFLAGS+=-Wno-error=maybe-uninitialized
+COMPILERFLAGS+=-Wno-error=uninitialized
+COMPILERFLAGS+=-Wno-error=deprecated-declarations
+COMPILERFLAGS+=-Wno-error=unused-result
+COMPILERFLAGS+=-Wno-error=infinite-recursion
+COMPILERFLAGS+=-Wno-error=range-loop-construct
+
 
 LINKERFLAGS+=-Wl,--copy-dt-needed-entries
 #LINKERFLAGS+=-pg
