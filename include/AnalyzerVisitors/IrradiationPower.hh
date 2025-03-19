@@ -12,6 +12,7 @@
 #include "SimParms.hh"
 #include "Visitor.hh"
 #include "SummaryTable.hh"
+#include "IrradiationStats.hh"
 
 typedef std::tuple<bool, bool, std::string, int, int> ModuleRef;
 // Used to identify an irradiated module : all info which matters in that respect.
@@ -26,8 +27,8 @@ class IrradiationPowerVisitor : public GeometryVisitor {
   double biasVoltage_;
   const IrradiationMapsManager* irradiationMap_;
   const IrradiationMapsManager* doseMap_;
-  std::pair<double, double> getModuleFluenceMeanMax(const IrradiationMapsManager* irradiationMap, const DetectorModule& m);
-  std::pair<double, double> getModuleDoseMeanMax(const IrradiationMapsManager* doseMap, const DetectorModule& m);
+  IrradiationStats getModuleFluenceStats(const IrradiationMapsManager* irradiationMap, const DetectorModule& m);
+  IrradiationStats getModuleDoseStats(const IrradiationMapsManager* doseMap, const DetectorModule& m);
   const double computeSensorsPower(const double& totalFluence,
 				   const double& alphaParam, const double& volume, const double& referenceTemp,
 				   const double& operatingTemp, const double& biasVoltage) const;
