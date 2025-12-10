@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ -f $HOME/.tkgeometryrc ] && source ~/.tkgeometryrc && cd $TKG_LAYOUTDIRECTORY
+python3 -m http.server 8000
+
