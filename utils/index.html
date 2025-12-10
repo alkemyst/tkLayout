@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Irradiation Map Viewer</title>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  #plot { width: 100%; height: 80vh; }
+  #controls { margin-top: 20px; }
+  input[type=range] { width: 100%; }
+</style>
+</head>
+
+<body>
+
+<h2>Irradiation Map Viewer (R vs Z)</h2>
+
+<p><b>Select CSV file:</b><br>
+<input type="file" id="csvFile" accept=".csv">
+</p>
+
+<div id="plot"></div>
+
+<div id="controls">
+  <label>
+    <b>Threshold:</b> <span id="threshLabel"></span>
+  </label><br>
+  <input id="slider" type="range" min="0" max="1" step="0.001">
+</div>
+
+<script>
+// ============================================================
+// THRESHOLD LOG SCALE
+// ============================================================
+const minDose = 2e4;    // 20 kGy
+const maxDose = 1.6e6;  // 1.6 MGy
+
+function sliderToDose(x) {
+    return minDose * Math.pow(maxDose / minDose, x);
+}
+
+function fmtDose(x) {
+    if (x < 1e3) return x.toFixed(0);
+    if (x < 1e6) return (x/1e3).toFixed(1) + " kGy";
+    return (x/1e6).toFixed(2) + " MGy";
+}
+
+// ============================================================
+// IMPROVED DUPLICATE FILTER
+// Removes ONLY points whose (r,z) are effectively identical
+// ============================================================
+function filterClosePoints(mods) {
+    const filtered = [];
+    const tolR = 0.2; // mm tolerance in r
+    const tolZ = 0.2; // mm tolerance in z
+
+    for (const m of mods) {
+        let duplicate = false;
+
+        for (const f of filtered) {
+            if (Math.abs(m.r - f.r) < tolR &&
+                Math.abs(m.z - f.z) < tolZ) {
+                duplicate = true;
+                break;
+            }
+        }
+
+        if (!duplicate)
+            filtered.push(m);
+    }
+
+    return filtered;
+}
+
+// ============================================================
+// CSV PARSER (auto-detect r_mm, z_mm, sensorsDoseMax_Gy)
+// ============================================================
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const header = lines[0].split(",").map(h => h.trim());
+
+    const normalize = s => s.replace(/\s+/g, "").toLowerCase();
+    const find = expected =>
+        header.findIndex(h => normalize(h) === normalize(expected));
+
+    const iR    = find("r_mm");
+    const iZ    = find("z_mm");
+    const iDose = find("sensorsDoseMax_Gy");
+
+    if (iR < 0 || iZ < 0 || iDose < 0) {
+        alert(
+            "CSV missing required columns:\n" +
+            "  r_mm, z_mm, sensorsDoseMax_Gy\n\n" +
+            "Found columns:\n" + header.join(", ")
+        );
+        return [];
+    }
+
+    const out = [];
+    for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(",").map(s => s.trim());
+        if (parts.length < header.length) continue;
+
+        out.push({
+            z: parseFloat(parts[iZ]),
+            r: parseFloat(parts[iR]),
+            dose: parseFloat(parts[iDose])
+        });
+    }
+    return out;
+}
+
+// ============================================================
+// PLOTTING
+// ============================================================
+let modules = [];
+const slider = document.getElementById("slider");
+const threshLabel = document.getElementById("threshLabel");
+const plotDiv = document.getElementById("plot");
+
+function updatePlot() {
+    if (modules.length === 0) return;
+
+    const threshold = sliderToDose(slider.value);
+    threshLabel.textContent = fmtDose(threshold);
+
+    const colors = modules.map(m =>
+        m.dose > threshold ? "rgb(255,120,0)" : "rgb(50,120,255)"
+    );
+
+    const trace = {
+        x: modules.map(m => m.z),
+        y: modules.map(m => m.r),
+        mode: "markers",
+        type: "scatter",
+        marker: { size: 6, color: colors },
+        text: modules.map(m => `Dose: ${fmtDose(m.dose)}`),
+        hovertemplate: "z: %{x}<br>r: %{y}<br>%{text}<extra></extra>"
+    };
+
+    const layout = {
+        xaxis: { title: "z [mm]" },
+        yaxis: { title: "r [mm]" },
+        title: "Module Locations (colored by threshold)",
+        hovermode: "closest"
+    };
+
+    Plotly.react(plotDiv, [trace], layout);
+}
+
+slider.addEventListener("input", updatePlot);
+
+// ============================================================
+// FILE PICKER LOADING
+// ============================================================
+document.getElementById("csvFile").addEventListener("change", evt => {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        modules = filterClosePoints(parseCSV(e.target.result));
+        slider.value = 0;
+        updatePlot();
+    };
+    reader.readAsText(file);
+});
+
+// ============================================================
+// AUTO-LOAD sensorsIrradiationOuter.csv IF POSSIBLE
+// ============================================================
+async function tryAutoLoad() {
+    try {
+        const response = await fetch("sensorsIrradiationOuter.csv");
+        if (!response.ok) throw new Error("Not found");
+
+        const text = await response.text();
+        modules = filterClosePoints(parseCSV(text));
+        slider.value = 0;
+        updatePlot();
+
+        console.log("Auto-loaded sensorsIrradiationOuter.csv");
+        return true;
+
+    } catch (err) {
+        console.log("Auto-load failed:", err);
+        return false;
+    }
+}
+
+tryAutoLoad();
+</script>
+
+</body>
+</html>
