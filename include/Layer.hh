@@ -101,6 +101,7 @@ public:
   Property<bool, NoDefault> isTiltedAuto;
   Property<string, AutoDefault> tiltedLayerSpecFile;
 
+  Property<bool, Default> isSkewed;
   Property<bool, Default> isSkewedForInstallation;
   Property<double, NoDefault> skewedModuleEdgeShift;
   Property<double, Default> installationOverlapRatio;
@@ -134,6 +135,7 @@ public:
 	    isTilted       ("isTilted"       , parsedOnly(), false),
 	    isTiltedAuto   ("isTiltedAuto"   , parsedOnly()),
             tiltedLayerSpecFile("tiltedLayerSpecFile", parsedOnly()),
+	    isSkewed("isSkewed", parsedOnly(), false),
 	    isSkewedForInstallation("isSkewedForInstallation", parsedOnly(), false),
 	    skewedModuleEdgeShift("skewedModuleEdgeShift", parsedOnly()),
 	    installationOverlapRatio("installationOverlapRatio", parsedOnly(), 2.), // remove default??

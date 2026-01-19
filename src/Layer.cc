@@ -255,6 +255,38 @@ void Layer::cutAtEta(double eta) {
   rods_.erase_if([](const RodPair& r) { return r.numModules() == 0; }); // get rid of rods which have been completely pruned
 }
 
+// TODO: complete this
+void Layer::buildAndStoreSkewedLayer() {
+  const double rodCenterPhiShift = 2 * M_PI / numRods();
+  const RodTemplate = makeRodTemplate(); 
+  const double firstRodCenterPhi = (rotateLayerByRodsDeltaPhiHalf()) ? rodCenterPhiShift / 2. : 0;
+
+  for (int iLadder=0; iLadder<numRods(); ++iLadder) {
+
+    // CREATE LADDERS
+    StraightRodPair* aLadder = GeometryFactory::make<StraightRodPair>(subdetectorName());
+    assignRodCommonProperties(aLadder);
+    aLadder->myid(iLadder+1);
+
+    int shiftDirection = (iLadder%2)*2-1;
+    if (isPlusBigDeltaRod) shiftDirection *= -1;
+    double ladderRadius = placeRadius_ + shiftDirection * 2 * bigDelta(); // TODO: remove this factor 2
+    placeAndStoreRod(aLadder, rodTemplate, bigParity(), firstRodCenterPhi, ladderRadius);
+
+    // PHI ROTATION
+    double ladderPhi;
+    if (false) { // TODO: change this into !manualPhi.state() 
+      ladderPhi = rodCenterPhiShift * iLadder + firstRodCenterPhi;
+    } else {
+      ladderPhi = 0;
+      // TODO: change this into ladderPhi = manualPhi() + firstRodCenterPhi;
+    }
+    aLadder->rotateZ(ladderPhi);
+
+    // STORE
+    rods_.push_back(aLadder);
+  }
+}
 
 /* PRIVATE */
 
@@ -266,6 +298,12 @@ void Layer::cutAtEta(double eta) {
  */
 void Layer::buildStraight() {
 
+  // If the skew angle is assigned per-module, we do not use templates at all
+  if (isSkewed()) {
+    buildAndStoreSkewedLayer();
+    return;
+  }
+
   // COMPUTES A ROD TEMPLATE
   RodTemplate rodTemplate = makeRodTemplate();
 
@@ -275,7 +313,7 @@ void Layer::buildStraight() {
   // NON-SKEWED LAYER: compute shift in Phi between consecutive rods centers.
   const double rodCenterPhiShift = computeRodCenterPhiShift();
 
-  // SKEWED LAYER: compute parameters of interest.
+  // INSTALLATION-SKEWED LAYER: compute parameters of interest.
   const SkewedLayerPhiShifts& phiShifts = (isSkewedForInstallation() ? buildSkewed() : SkewedLayerPhiShifts{ 0.,0.,0.} );
   const double installationMinusBigDeltaRodCenterPhiShift = phiShifts.installationMinusBigDeltaRodCenterPhiShift;
   const double commonRodCenterPhiShift = phiShifts.commonRodCenterPhiShift;
@@ -558,10 +596,14 @@ void Layer::placeAndStoreSecondRod(StraightRodPair* secondRod, const RodTemplate
 /*
  * Place a rod radially and in phi + Store it.
  */
-void Layer::placeAndStoreRod(StraightRodPair* rod, const RodTemplate& rodTemplate, const bool isPlusBigDeltaRod, const double rodCenterPhi) {
+void Layer::placeAndStoreRod(StraightRodPair* rod, const RodTemplate& rodTemplate, const bool isPlusBigDeltaRod, const double rodCenterPhi, const double radius = 0) {
   rod->isOuterRadiusRod(isPlusBigDeltaRod);
   rod->build(rodTemplate, isPlusBigDeltaRod);
-  rod->translateR(placeRadius_ + (isPlusBigDeltaRod ? bigDelta() : -bigDelta()));
+  if (radius ==0 ) {
+    rod->translateR(placeRadius_ + (isPlusBigDeltaRod ? bigDelta() : -bigDelta()));
+  } else {
+    rod->translateR(radius);
+  }
   
   rod->rotateZ(rodCenterPhi);
   if (!isSkewedForInstallation()) {
