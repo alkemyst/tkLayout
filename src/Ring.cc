@@ -106,15 +106,15 @@ void Ring::buildModules(EndcapModule* templ, int numMods, double smallDelta, dou
       doYaw = true;
       yawAngle += M_PI;
     }
+    double mod_r = mod->center().Rho();
     if (doYaw) {
-      double tmp_r = mod->center().Rho();
-      mod->translateR(-tmp_r); //perform yaw angle rotation with the module at the centre
+      mod->translateR(-mod_r);
       mod->yaw(yawAngle);
-      if(mod->manualRhoCentre() > 0 ){// For irregular rings (with yawed modules) that need to stay tangent to the same inner/outer radius, the module centre is shifted
-        mod->translateR(mod->manualRhoCentre()-mod->center().Rho());
-      } else {
-        mod->translateR(tmp_r-mod->center().Rho());
-      }
+      mod->translateR(mod_r);
+    }
+    // For irregular rings, the module centre is shifted
+    if (mod->manualRhoCentre() > 0 ){
+      mod->translateR(mod->manualRhoCentre()-mod_r);
     }
     if (deltaPhiLarge == deltaPhiNom) { //In this case we have uniform phi spacing between the modules
       nominalZRot = (i + alignmentRotation)*deltaPhiNom;
